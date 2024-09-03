@@ -431,11 +431,11 @@ module fpx_conj #(
 
 generate if (TRIGOUT) begin
 	always @(posedge clk) begin
-		p <= {~a[2*NUM_W-1], a[2*NUM_W-2-:NUM_W], a[NUM_W-1-:NUM_W]};
+		p <= {~a[2*NUM_W-1], a[2*NUM_W-2-:NUM_W-1], a[NUM_W-1-:NUM_W]};
 	end
 end else begin
 	always @(*) begin
-		p = {~a[2*NUM_W-1], a[2*NUM_W-2-:NUM_W], a[NUM_W-1-:NUM_W]};
+		p = {~a[2*NUM_W-1], a[2*NUM_W-2-:NUM_W-1], a[NUM_W-1-:NUM_W]};
 	end
 end endgenerate
 
