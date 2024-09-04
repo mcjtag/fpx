@@ -70,7 +70,7 @@ always @(*) begin
 	p_norm = norm ? p_mul : p_mul << 1;
 	p_man = p_norm[2*(MAN_W+1)-2-:MAN_W] + (p_norm[MAN_W] & (|p_norm[MAN_W-1:0]));
 	exp = exp_s - (2**(EXP_W-1)-1) + norm; //
-	zero = exc ? 1'b0 : (p_man == 'd0) ? 1'b1 : 1'b0;
+	zero = exc ? 1'b0 : (p_mul == 'd0) ? 1'b1 : 1'b0;
 	ovf = ((exp[EXP_W] & !exp[EXP_W-1]) & !zero) ? 1'b1 : 1'b0;
 	unf = ((exp[EXP_W] &  exp[EXP_W-1]) & !zero) ? 1'b1 : 1'b0;
 	p_w = exc  ? {1'b0, {EXP_W{1'b1}}, 1'b1, {(MAN_W-1){1'b0}}} : 
