@@ -1,4 +1,4 @@
-A parameterizable floating point operations (written in Verilog)
+A parameterizable floating point unit (written in Verilog)
 
 Implemented operations:
 1) Multiplication
