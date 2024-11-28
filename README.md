@@ -13,10 +13,11 @@ Implemented operations:
 
 #### Parameters
 
-* `NUM_W`   - Number Width
-* `EXP_W`   - Exponent Width
-* `MAN_W`   - Mantissa Width
-* `TRIGOUT` - Output Trigger (1 - enable, 0 - disable)
+* `NUM_W`  - Number Width
+* `NUM_Q`  - Fraction Width
+* `EXP_W`  - Exponent Width
+* `MAN_W`  - Mantissa Width
+* `REGOUT` - Output Trigger (1 - enable, 0 - disable)
 
 #### IEEE754 settings
 
