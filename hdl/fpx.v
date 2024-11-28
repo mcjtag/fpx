@@ -40,7 +40,7 @@ module fpx_mul #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -80,7 +80,7 @@ always @(*) begin
 				 {sign, exp[EXP_W-1:0], p_man};
 end
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= p_w;
 	end
@@ -99,7 +99,7 @@ module fpx_add #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -156,7 +156,7 @@ always @(*) begin
 		           {sign, add_sum};
 end
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= p_w;
 	end
@@ -173,9 +173,10 @@ endmodule
 //
 module fpx_rtoi #(
 	parameter NUM_W = 32,		// Number Width
+	parameter NUM_Q = 0,		// Number Q-format (fraction width)
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -199,7 +200,7 @@ always @(*) begin
  		p_w = {1'b1, {(NUM_W-1){1'b0}}};
 	end else begin
 		for (i = 0; i < (NUM_W-1); i = i + 1) begin
-			if (($signed(exp) < (NUM_W-1)) && sign_a) begin
+			if (($signed(exp) < (NUM_W-NUM_Q-1)) && sign_a) begin
 				exp = exp + 1;
 				sign_a = sign_a >> 1;
         	end 
@@ -212,7 +213,7 @@ always @(*) begin
 	end
 end
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= p_w;
 	end
@@ -229,9 +230,10 @@ endmodule
 //
 module fpx_itor #(
 	parameter NUM_W = 32,		// Number Width
+	parameter NUM_Q = 0,		// Number Q-format (fraction width)
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -252,7 +254,7 @@ always @(*) begin
 		exp = -(2**(EXP_W-1)-1);
 	end else begin
 		sign = a[NUM_W-1];
-		exp = NUM_W-1;
+		exp = NUM_W-NUM_Q-1;
         {sign_a, exp_s} = a[NUM_W-1] ? -a : a;
         for (i = 0; i < (NUM_W-1); i = i + 1) begin
         	if (sign_a[MAN_W] == 1'b0) begin
@@ -273,7 +275,7 @@ always @(*) begin
 	p_w[NUM_W-1] = sign;
 end
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= p_w;
 	end
@@ -292,7 +294,7 @@ module fpx_abs #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -300,7 +302,7 @@ module fpx_abs #(
 	output reg [NUM_W-1:0]p		// Product P=abs(A)
 );
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= {1'b0, a[NUM_W-2:0]};
 	end
@@ -319,7 +321,7 @@ module fpx_cmp #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -351,7 +353,7 @@ always @(*) begin
 	end
 end
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		{gt, eq, lt} <= {p_gt, p_eq, p_lt};
 	end
@@ -370,7 +372,7 @@ module fpx_cmul #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -382,13 +384,13 @@ module fpx_cmul #(
 wire [NUM_W-1:0]re[1:0];
 wire [NUM_W-1:0]im[1:0];
 
-fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_mul_re0 (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[NUM_W-1-:NUM_W]),  .p(re[0]));
-fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_mul_re1 (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[2*NUM_W-1-:NUM_W]),.p(re[1]));
-fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_mul_im0 (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[NUM_W-1-:NUM_W]),  .p(im[0]));
-fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_mul_im1 (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[2*NUM_W-1-:NUM_W]),.p(im[1]));
+fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_mul_re0 (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[NUM_W-1-:NUM_W]),  .p(re[0]));
+fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_mul_re1 (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[2*NUM_W-1-:NUM_W]),.p(re[1]));
+fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_mul_im0 (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[NUM_W-1-:NUM_W]),  .p(im[0]));
+fpx_mul #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_mul_im1 (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[2*NUM_W-1-:NUM_W]),.p(im[1]));
 
-fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_add_re  (.clk(clk),.a(re[0]),.b(re[1]),.sub(1'b1),.p(p[NUM_W-1-:NUM_W]));
-fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_add_im  (.clk(clk),.a(im[0]),.b(im[1]),.sub(1'b0),.p(p[2*NUM_W-1-:NUM_W]));
+fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_add_re  (.clk(clk),.a(re[0]),.b(re[1]),.sub(1'b1),.p(p[NUM_W-1-:NUM_W]));
+fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_add_im  (.clk(clk),.a(im[0]),.b(im[1]),.sub(1'b0),.p(p[2*NUM_W-1-:NUM_W]));
 
 endmodule
 
@@ -399,7 +401,7 @@ module fpx_cadd #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -409,8 +411,8 @@ module fpx_cadd #(
 	input wire sub				// Subraction: 0 - add, 1 - subtract
 );
 
-fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_add_re (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[NUM_W-1-:NUM_W]),  .sub(sub),.p(p[NUM_W-1-:NUM_W]));
-fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .TRIGOUT(TRIGOUT)) fpx_add_im (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[2*NUM_W-1-:NUM_W]),.sub(sub),.p(p[2*NUM_W-1-:NUM_W]));
+fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_add_re (.clk(clk),.a(a[NUM_W-1-:NUM_W]),  .b(b[NUM_W-1-:NUM_W]),  .sub(sub),.p(p[NUM_W-1-:NUM_W]));
+fpx_add #(.NUM_W(NUM_W), .EXP_W(EXP_W), .MAN_W(MAN_W), .REGOUT(REGOUT)) fpx_add_im (.clk(clk),.a(a[2*NUM_W-1-:NUM_W]),.b(b[2*NUM_W-1-:NUM_W]),.sub(sub),.p(p[2*NUM_W-1-:NUM_W]));
 
 endmodule
 
@@ -421,7 +423,7 @@ module fpx_conj #(
 	parameter NUM_W = 32,		// Number Width
 	parameter EXP_W = 8,		// Exponent Width
 	parameter MAN_W = 23,		// Mantissa Width
-	parameter TRIGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
+	parameter REGOUT = 0		// Output Trigger (1 - enable, 0 - disable)
 )
 (
 	input wire clk,
@@ -429,7 +431,7 @@ module fpx_conj #(
 	output reg [2*NUM_W-1:0]p	// Complex Product P=Re{A}-1*Im{B}: REAL=p[NUM_W-1-:NUM_W], IMAG=p[2*NUM_W-1-:NUM_W]
 );
 
-generate if (TRIGOUT) begin
+generate if (REGOUT) begin
 	always @(posedge clk) begin
 		p <= {~a[2*NUM_W-1], a[2*NUM_W-2-:NUM_W-1], a[NUM_W-1-:NUM_W]};
 	end
